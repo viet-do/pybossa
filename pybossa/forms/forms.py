@@ -351,10 +351,10 @@ class RegisterForm(Form):
 
     """Register Form Class for creating an account in PYBOSSA."""
 
-    err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
-                           "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
-    fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
+    # err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
+    #                       "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
+    # fullname = TextField(lazy_gettext('Full name'),
+    #                     [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
@@ -374,6 +374,10 @@ class RegisterForm(Form):
                                               message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
+    #############################################################viet
+    native_speaker = BooleanField(lazy_gettext('Native English Speaker'))
+    #############################################################viet
+    consent = BooleanField('I accept receiving emails from EasyText')
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
@@ -390,7 +394,11 @@ class RegisterForm(Form):
                             validators.EqualTo('confirm', err_msg_2)])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
-    consent = BooleanField(false_values=("False", "false", '', '0', 0))
+    
+    #############################################################viet
+    consent1= BooleanField(lazy_gettext('I acknowledge participation is a volunteer basis. I waive any and all claims to ownership of my contributions to the Easy COVID-19 project and will never seek compensation for those contributions.'),false_values=("False", "false", '', '0', 0))
+    consent2= BooleanField(lazy_gettext('I am not a resident of California, Colorado or a country outside the United States of America'),false_values=("False", "false", '', '0', 0))
+    #############################################################viet
 
 
 class UpdateProfileForm(Form):
@@ -399,11 +407,10 @@ class UpdateProfileForm(Form):
 
     id = IntegerField(label=None, widget=HiddenInput())
 
-    err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
-                           "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
-    fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
-
+    # err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
+    #                       "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
+    # fullname = TextField(lazy_gettext('Full name'),
+    #                     [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
@@ -422,6 +429,10 @@ class UpdateProfileForm(Form):
                                               message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
+    #############################################################viet
+    native_speaker = BooleanField(lazy_gettext('Native English Speaker'))   # viet
+    #############################################################viet
+
     subscribed = BooleanField(lazy_gettext('Get email notifications'))
 
     locale = SelectField(lazy_gettext('Language'))

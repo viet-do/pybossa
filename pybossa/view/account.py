@@ -74,16 +74,18 @@ def index(page=1):
     update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
+
     accounts = cached_users.get_users_page(page, per_page)
-    if not accounts and page != 1:
-        abort(404)
+    #if not accounts and page != 1:
+    #    abort(404)
     pagination = Pagination(page, per_page, count)
     if current_user.is_authenticated:
         user_id = current_user.id
     else:
         user_id = None
-    top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
+    top_users = cached_users.get_leaderboard(10,
                                              user_id)
+    # current_app.config['LEADERBOARD']
     tmp = dict(template='account/index.html', accounts=accounts,
                total=count,
                top_users=top_users,
@@ -157,10 +159,20 @@ def signin():
 
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
+    auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous:
+        # If Twitter is enabled in config, show the Twitter Sign in button
+        if (isLdap is False):
+            if ('twitter' in current_app.blueprints):  # pragma: no cover
+                auth['twitter'] = True
+            if ('facebook' in current_app.blueprints):  # pragma: no cover
+                auth['facebook'] = True
+            if ('google' in current_app.blueprints):  # pragma: no cover
+                auth['google'] = True
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,
+                        auth=auth,
                         next=request.args.get('next'))
         return handle_content_type(response)
     else:
@@ -304,6 +316,7 @@ def register():
     Returns a Jinja2 template
 
     """
+
     if current_app.config.get('LDAP_HOST', False):
         return abort(404)
     if not current_app.config.upref_mdata:
@@ -312,21 +325,24 @@ def register():
         form = RegisterFormWithUserPrefMetadata(request.body)
         form.set_upref_mdata_choices()
 
-    msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
-    form.consent.label = msg
+    # msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')   
+    msg = "I accept receiving emails from EasyText and the collection and use of my personal data per the terms of the privacy policy"
+    # form.consent.label = msg					#Viet
     if request.method == 'POST' and form.validate():
         if current_app.config.upref_mdata:
             user_pref, metadata = get_user_pref_and_metadata(form.name.data, form)
-            account = dict(fullname=form.fullname.data, name=form.name.data,
+            account = dict(fullname=form.email_addr.data, name=form.name.data,
                            email_addr=form.email_addr.data,
+                           native_speaker=form.native_speaker.data,       #viet
                            password=form.password.data,
                            consent=form.consent.data,
                            user_type=form.user_type.data)
             account['user_pref'] = user_pref
             account['metadata'] = metadata
         else:
-            account = dict(fullname=form.fullname.data, name=form.name.data,
+            account = dict(fullname=form.email_addr.data, name=form.name.data,
                            email_addr=form.email_addr.data,
+                           native_speaker=form.native_speaker.data,       #viet
                            password=form.password.data,
                            consent=form.consent.data)
 
@@ -401,6 +417,7 @@ def confirm_account():
 def _create_account(user_data, ldap_disabled=True):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
+                               native_speaker=user_data['native_speaker'],
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data['consent'])
@@ -570,6 +587,8 @@ def update_profile(name):
         return abort(404)
     ensure_authorized_to('update', user)
     show_passwd_form = True
+    if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
+        show_passwd_form = False
     usr = cached_users.get_user_summary(name, current_user)
     # Extend the values
     user.rank = usr.get('rank')
@@ -662,7 +681,12 @@ def _handle_profile_update(user, update_form):
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
     if update_form.validate_on_submit():
         user.id = update_form.id.data
-        user.fullname = update_form.fullname.data
+        user.fullname = update_form.email_addr.data
+        ##############################################viet
+        # user.city = update_form.city.data 
+        # user.state = update_form.state.data
+        user.native_speaker = update_form.native_speaker.data
+        ##############################################viet
         user.name = update_form.name.data
         account, domain = update_form.email_addr.data.split('@')
         if (user.email_addr != update_form.email_addr.data and
@@ -792,16 +816,38 @@ def forgot_password():
         if user and user.email_addr:
             msg = dict(subject='Account Recovery',
                        recipients=[user.email_addr])
-            userdict = {'user': user.name, 'password': user.passwd_hash}
-            key = signer.dumps(userdict, salt='password-reset')
-            recovery_url = url_for_app_type('.reset_password',
-                                            key=key, _external=True)
-            msg['body'] = render_template(
-                '/account/email/forgot_password.md',
-                user=user, recovery_url=recovery_url)
-            msg['html'] = render_template(
-                '/account/email/forgot_password.html',
-                user=user, recovery_url=recovery_url)
+            if user.twitter_user_id:
+                msg['body'] = render_template(
+                    '/account/email/forgot_password_openid.md',
+                    user=user, account_name='Twitter')
+                msg['html'] = render_template(
+                    '/account/email/forgot_password_openid.html',
+                    user=user, account_name='Twitter')
+            elif user.facebook_user_id:
+                msg['body'] = render_template(
+                    '/account/email/forgot_password_openid.md',
+                    user=user, account_name='Facebook')
+                msg['html'] = render_template(
+                    '/account/email/forgot_password_openid.html',
+                    user=user, account_name='Facebook')
+            elif user.google_user_id:
+                msg['body'] = render_template(
+                    '/account/email/forgot_password_openid.md',
+                    user=user, account_name='Google')
+                msg['html'] = render_template(
+                    '/account/email/forgot_password_openid.html',
+                    user=user, account_name='Google')
+            else:
+                userdict = {'user': user.name, 'password': user.passwd_hash}
+                key = signer.dumps(userdict, salt='password-reset')
+                recovery_url = url_for_app_type('.reset_password',
+                                                key=key, _external=True)
+                msg['body'] = render_template(
+                    '/account/email/forgot_password.md',
+                    user=user, recovery_url=recovery_url)
+                msg['html'] = render_template(
+                    '/account/email/forgot_password.html',
+                    user=user, recovery_url=recovery_url)
             mail_queue.enqueue(send_mail, msg)
             flash(gettext("We've sent you an email with account "
                           "recovery instructions!"),
