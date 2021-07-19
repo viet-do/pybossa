@@ -22,6 +22,7 @@ from sqlalchemy import cast, Date
 from pybossa.repositories import Repository
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.model.review import Review
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
@@ -32,7 +33,18 @@ class TaskRepository(Repository):
 
     # Methods for queries on Task objects
     def get_task(self, id):
+        #abc = self.db.session.query(Review).get(id)
         return self.db.session.query(Task).get(id)
+        #cde = Task()
+        #cde.project_id = abc.user_id
+        #return cde
+
+    def get_review(self, id):
+        #raise Exception("abc")
+        a = self.db.session.query(Review).get(id)
+        #raise Exception(a.user_id)
+        return a
+        #return Review()
 
     def get_task_by(self, **attributes):
         filters, _, _, _ = self.generate_query_from_keywords(Task, **attributes)
@@ -93,6 +105,28 @@ class TaskRepository(Repository):
     def count_task_runs_with(self, **filters):
         query_args, _, _, _ = self.generate_query_from_keywords(TaskRun, **filters)
         return self.db.session.query(TaskRun).filter(*query_args).count()
+
+    # Get number of unskipped taskruns
+    def count_task_runs_unskip(self, userid, projectid):
+        sql = text('''
+                   SELECT count(*) from task_run WHERE info <> '"skip"' And user_id=:user_id And project_id=:project_id;
+                   ''')
+        return self.db.session.execute(sql, dict(user_id=userid, project_id=projectid)).scalar()
+
+    # Get number of all taskruns
+    def count_task_runs_all(self, userid, projectid):
+        sql = text('''
+                   SELECT count(*) from task_run WHERE user_id=:user_id And project_id=:project_id;
+                   ''')
+        return self.db.session.execute(sql, dict(user_id=userid, project_id=projectid)).scalar()
+
+    def delete_skipped_tasks(self, userid, projectid):
+        sql = text('''
+                   Delete from task_run WHERE info = '"skip"' And user_id=:user_id And project_id=:project_id;
+                   ''')
+        self.db.session.execute(sql, dict(user_id=userid, project_id=projectid))
+        self.db.session.commit()
+        cached_projects.clean_project(projectid)
 
 
     # Methods for saving, deleting and updating both Task and TaskRun objects
@@ -170,7 +204,7 @@ class TaskRepository(Repository):
         cached_projects.clean_project(project.id)
 
     def _validate_can_be(self, action, element):
-        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+        if not isinstance(element, Task) and not isinstance(element, TaskRun) and not isinstance(element, Review):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
