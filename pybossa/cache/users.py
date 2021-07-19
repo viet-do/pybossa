@@ -46,10 +46,11 @@ def get_user_summary(name, current_user=None):
     """Return user summary."""
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
-               "user".api_key, "user".info, "user".admin,
+               "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
+               "user".google_user_id, "user".info, "user".admin,
                "user".locale,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
-               "user".valid_email, "user".confirmation_email_sent,
+               "user".valid_email, "user".confirmation_email_sent, 
                "user".restrict
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
@@ -61,6 +62,9 @@ def get_user_summary(name, current_user=None):
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     created=row.created, api_key=row.api_key,
+                    twitter_user_id=row.twitter_user_id,
+                    google_user_id=row.google_user_id,
+                    facebook_user_id=row.facebook_user_id,
                     info=row.info, admin=row.admin,
                     locale=row.locale,
                     email_addr=row.email_addr, n_answers=row.n_answers,
@@ -223,8 +227,7 @@ def draft_projects_cached(user_id):
     return draft_projects(user_id)
 
 
-@cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
-       key_prefix="site_total_users")
+# @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),key_prefix="site_total_users")
 def get_total_users():
     """Return total number of users in the server."""
     count = User.query.count()
@@ -238,11 +241,12 @@ def get_users_page(page, per_page=24):
     sql = text('''SELECT "user".id, "user".name,
                "user".fullname, "user".email_addr,
                "user".created, "user".info, COUNT(task_run.id) AS task_runs
-               FROM task_run, "user"
-               WHERE "user".id=task_run.user_id GROUP BY "user".id
+               FROM  "user" Left join task_run
+               On "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = session.execute(sql, dict(limit=per_page, offset=offset))
     accounts = []
+    # Changed to left join - Viet
 
     u = User()
 
