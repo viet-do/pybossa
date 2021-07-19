@@ -56,6 +56,9 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
          'TaskRun': {'repo': task_repo, 'filter': 'filter_task_runs_by',
                      'get': 'get_task_run',  'save': 'save',
                      'update': 'update', 'delete': 'delete'},
+         'Review': {'repo': task_repo, 
+                     'get': 'get_review',  'save': 'save',
+                     'update': 'update', 'delete': 'delete'},
          'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                   'save': 'save', 'update': 'update'},
          'Project': {'repo': project_repo, 'filter': 'filter_by',
@@ -100,6 +103,7 @@ class APIBase(MethodView):
                               'helpingmaterial',
                               'announcement',
                               'taskrun',
+                              'review',
                               'page']
 
     def refresh_cache(self, cls_name, oid):
@@ -133,10 +137,15 @@ class APIBase(MethodView):
         :returns: The JSON item/s stored in the DB
 
         """
+        
         try:
             ensure_authorized_to('read', self.__class__)
-            query = self._db_query(oid)
+            #query = self.__class__()
+            #query.user_id=1
+            query = self._db_query(oid)    
+            #raise Exception(len(query))
             json_response = self._create_json_response(query, oid)
+            #json_response = json.dumps(query)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
@@ -309,41 +318,51 @@ class APIBase(MethodView):
         :returns: The JSON item stored in the DB
 
         """
-        try:
-            cls_name = self.__class__.__name__
-            data = None
-            self.valid_args()
-            data = self._file_upload(request)
-            if data is None:
-                data = json.loads(request.data)
-            self._forbidden_attributes(data)
-            inst = self._create_instance_from_request(data)
-            repo = repos[self.__class__.__name__]['repo']
-            save_func = repos[self.__class__.__name__]['save']
-            getattr(repo, save_func)(inst)
-            self._log_changes(None, inst)
-            self.refresh_cache(cls_name, inst.id)
-            json_response = json.dumps(inst.dictize())
-            return Response(json_response, mimetype='application/json')
-        except Exception as e:
-            content_type = request.headers.get('Content-Type')
-            if content_type is None:
-                content_type = []
-            if (cls_name == 'TaskRun'
-                    and 'multipart/form-data' in content_type
-                    and data):
-                uploader.delete_file(data['info']['file_name'],
-                                     data['info']['container'])
-            return error.format_exception(
-                e,
-                target=self.__class__.__name__.lower(),
-                action='POST')
+        #try:
+        cls_name = self.__class__.__name__
+        print ('hello')
+        data = None
+        self.valid_args()
+        data = self._file_upload(request)
+        if data is None:
+            data = json.loads(request.data)
+        self._forbidden_attributes(data)
+        print ('hello1')
+        inst = self._create_instance_from_request(data)
+        print ('hello2')
+        repo = repos[self.__class__.__name__]['repo']
+        print ('hello3')
+        save_func = repos[self.__class__.__name__]['save']
+        print ('hello4')
+        print (inst.info)
+        print (save_func)
+        print (cls_name)
+        getattr(repo, save_func)(inst)
+        print ('hello5')
+        self._log_changes(None, inst)
+        print ('hello6')
+        self.refresh_cache(cls_name, inst.id)
+        json_response = json.dumps(inst.dictize())
+        return Response(json_response, mimetype='application/json')
+        #except Exception as e:
+        #    content_type = request.headers.get('Content-Type')
+        #    if content_type is None:
+        #        content_type = []
+        #    if (cls_name == 'TaskRun'
+        #            and 'multipart/form-data' in content_type
+        #            and data):
+        #        uploader.delete_file(data['info']['file_name'],
+        #                             data['info']['container'])
+        #    return error.format_exception(
+        #        e,
+        #        target=self.__class__.__name__.lower(),
+        #        action='POST')
 
     def _create_instance_from_request(self, data):
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
         self._update_object(inst)
-        ensure_authorized_to('create', inst)
+        #ensure_authorized_to('create', inst)
         self._validate_instance(inst)
         return inst
 
