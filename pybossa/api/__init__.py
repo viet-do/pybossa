@@ -244,6 +244,9 @@ def user_progress(project_id=None, short_name=None):
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             taskrun_all = task_repo.count_task_runs_all(current_user.id, project.id)
             taskrun_count = task_repo.count_task_runs_unskip(current_user.id, project.id)
+            total_tasks = n_tasks(project.id)
+            if total_tasks == taskrun_all + 1:
+                task_repo.delete_skipped_tasks(current_user.id, project.id)
             tmp = dict(done=taskrun_count, total=n_tasks(project.id))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
