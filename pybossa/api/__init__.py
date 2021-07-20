@@ -46,6 +46,7 @@ import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 from .global_stats import GlobalStatsAPI
 from .task import TaskAPI
+from .review import ReviewAPI
 from .task_run import TaskRunAPI
 from .project import ProjectAPI
 from .announcement import AnnouncementAPI
@@ -100,6 +101,7 @@ register_api(ProjectStatsAPI, 'api_projectstats',
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
+register_api(ReviewAPI, 'api_review', '/review', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
 register_api(AnnouncementAPI, 'api_announcement',
