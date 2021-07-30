@@ -848,7 +848,8 @@ def forgot_password():
                 msg['html'] = render_template(
                     '/account/email/forgot_password.html',
                     user=user, recovery_url=recovery_url)
-            mail_queue.enqueue(send_mail, msg)
+            # mail_queue.enqueue(send_mail, msg)
+            send_mail(msg)
             flash(gettext("We've sent you an email with account "
                           "recovery instructions!"),
                   'success')
