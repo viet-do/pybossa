@@ -1,4 +1,4 @@
-Hello {{ user.fullname }},
+Hello
 
 We received a request to recover your password for {{ config.BRAND }}.
 
