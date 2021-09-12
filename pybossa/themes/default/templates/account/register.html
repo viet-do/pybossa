@@ -24,23 +24,23 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
-	$('.btn-primary').attr('disabled','disabled');
+	//$('.btn-primary').attr('disabled','disabled');
 	
 	//$("#consent1").prop('required',true);
 	//$("#consent2").prop('required',true);
 
-	$('#consent1').click(function() {
-	    	if($('#consent1').is(":checked") & $('#consent2').is(":checked"))
-			$('.btn-primary').removeAttr('disabled');
-		else
-			$('.btn-primary').attr('disabled','disabled');
-	});
-	$('#consent2').click(function() {
-	    	if($('#consent1').is(":checked") & $('#consent2').is(":checked"))
-			$('.btn-primary').removeAttr('disabled');
-		else
-			$('.btn-primary').attr('disabled','disabled');
-	});
+	//$('#consent1').click(function() {
+	//    	if($('#consent1').is(":checked") & $('#consent2').is(":checked"))
+	//		$('.btn-primary').removeAttr('disabled');
+	//	else
+	//		$('.btn-primary').attr('disabled','disabled');
+	//});
+	//$('#consent2').click(function() {
+	//    	if($('#consent1').is(":checked") & $('#consent2').is(":checked"))
+	//		$('.btn-primary').removeAttr('disabled');
+	//	else
+	//		$('.btn-primary').attr('disabled','disabled');
+	//});
 	$('.btn-primary').on('click', function() {
 	//    	if($('#consent1').is(":checked") & $('#consent2').is(":checked"))
 	//		

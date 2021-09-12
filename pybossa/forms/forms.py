@@ -396,8 +396,9 @@ class RegisterForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     
     #############################################################viet
-    consent1= BooleanField(lazy_gettext('I acknowledge participation is a volunteer basis. I waive any and all claims to ownership of my contributions to the Easy COVID-19 project and will never seek compensation for those contributions.'),false_values=("False", "false", '', '0', 0))
-    consent2= BooleanField(lazy_gettext('I am not a resident of California, Colorado or a country outside the United States of America'),false_values=("False", "false", '', '0', 0))
+    consent1= BooleanField('I acknowledge participation is a volunteer basis. I waive any and all claims to ownership of my contributions to the Easy COVID-19 project and will never seek compensation for those contributions.', [validators.Required()])
+
+    #consent2= BooleanField(lazy_gettext('I am not a resident of California, Colorado or a country outside the United States of America'),false_values=("False", "false", '', '0', 0))
     #############################################################viet
 
 
