@@ -257,7 +257,7 @@
                        <div class="post-pic" style="background: rgb(0, 151, 167) url({{render_url_thumbnail(f, upload_method)}}) no-repeat center top; background-size: cover;"></div>
                        <div class="caption">
                            <h3>{{f.name}}</h3>
-                           <p>{{f.description}}</p>
+                           <p></p>
                            {% if featured %}
                             {% if f.featured %}
                             <p class="readmore">
@@ -271,7 +271,7 @@
                             </p>
                             {% endif %}
                            {% else %}
-                           <p class="readmore"><a href="{{ url_for('project.details', short_name=f.short_name)}}">{{_(readmore_text or 'More info')}}</a></p>
+                           <p class="readmore"><a href="{{ url_for('project.details', short_name=f.short_name)}}">Start</a></p>
                            {% endif %}
                        </div>
                    </div>
