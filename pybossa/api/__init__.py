@@ -54,6 +54,7 @@ from .blogpost import BlogpostAPI
 from .category import CategoryAPI
 from .favorites import FavoritesAPI
 from .user import UserAPI
+from .token import TokenAPI
 from .result import ResultAPI
 from .project_stats import ProjectStatsAPI
 from .helpingmaterial import HelpingMaterialAPI
@@ -94,18 +95,15 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-
 register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
-register_api(ProjectStatsAPI, 'api_projectstats',
-             '/projectstats', pk='oid', pk_type='int')
+register_api(ProjectStatsAPI, 'api_projectstats', '/projectstats', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ReviewAPI, 'api_review', '/review', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
-register_api(AnnouncementAPI, 'api_announcement',
-             '/announcement', pk='oid', pk_type='int')
+register_api(AnnouncementAPI, 'api_announcement', '/announcement', pk='oid', pk_type='int')
 register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(HelpingMaterialAPI, 'api_helpingmaterial',
              '/helpingmaterial', pk='oid', pk_type='int')
@@ -115,6 +113,7 @@ register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
              pk='oid', pk_type='int')
+register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
@@ -229,31 +228,68 @@ def user_progress(project_id=None, short_name=None):
             project = project_repo.get(project_id)
 
         if project:
-            # For now, keep this version, but wait until redis cache is
+            # For now, keep this version, but wait until redis cache is 
             # used here for task_runs too
-            external_uid = request.args.get('external_uid')
             query_attrs = dict(project_id=project.id)
             if current_user.is_anonymous:
-                if external_uid is None:
-                    anon_ip = request.remote_addr or '127.0.0.1'
-                    query_attrs['user_ip'] = anonymizer.ip(anon_ip)
-                else:
-                    query_attrs['external_uid'] = external_uid
+                query_attrs['user_ip'] = anonymizer.ip(request.remote_addr or
+                                                       '127.0.0.1')
             else:
                 query_attrs['user_id'] = current_user.id
-            # taskrun_count = task_repo.count_task_runs_with(**query_attrs)
+            taskrun_all = task_repo.count_task_runs_with(**query_attrs)
             taskrun_all = task_repo.count_task_runs_all(current_user.id, project.id)
             taskrun_count = task_repo.count_task_runs_unskip(current_user.id, project.id)
             total_tasks = n_tasks(project.id)
             if total_tasks == taskrun_all + 1:
                 task_repo.delete_skipped_tasks(current_user.id, project.id)
+
+            # tmp = dict(done=taskrun_all, total=total_tasks)
             tmp = dict(done=taskrun_count, total=total_tasks, run=taskrun_all)
+
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
 
+@jsonpify
+@blueprint.route('/app/<short_name>/userskip')
+@blueprint.route('/project/<short_name>/userskip')
+@blueprint.route('/app/<int:project_id>/userskip')
+@blueprint.route('/project/<int:project_id>/userskip')
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def user_skip(project_id=None, short_name=None):
+    """API endpoint for user progress.
+
+    Return a JSON object with two fields regarding the tasks for the user:
+        { 'done': 10,
+          'total: 100
+        }
+       This will mean that the user has done a 10% of the available tasks for
+       him
+
+    """
+    if project_id or short_name:
+        if short_name:
+            project = project_repo.get_by_shortname(short_name)
+        elif project_id:
+            project = project_repo.get(project_id)
+
+        if project:
+            # For now, keep this version, but wait until redis cache is 
+            # used here for task_runs too
+            query_attrs = dict(project_id=project.id)
+            if current_user.is_anonymous:
+                query_attrs['user_ip'] = anonymizer.ip(request.remote_addr or
+                                                       '127.0.0.1')
+            else:
+                query_attrs['user_id'] = current_user.id
+            tmp = task_repo.get_skipped_tasks(current_user.id, project.id)
+            return Response(json.dumps(tmp), mimetype="application/json")
+        else:
+            return abort(404)
+    else:  # pragma: no cover
+        return abort(404)
 
 @jsonpify
 @blueprint.route('/auth/project/<short_name>/token')
@@ -283,8 +319,7 @@ def get_disqus_sso_api():
     """Return remote_auth_s3 and api_key for disqus SSO."""
     try:
         if current_user.is_authenticated:
-            message, timestamp, sig, pub_key = get_disqus_sso_payload(
-                current_user)
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
         else:
             message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
 
