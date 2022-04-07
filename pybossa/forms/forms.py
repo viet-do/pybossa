@@ -19,7 +19,7 @@
 from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
+from wtforms import IntegerField, DecimalField, StringField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
@@ -50,11 +50,11 @@ BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 # Forms for projects view
 
 class ProjectForm(Form):
-    name = TextField(lazy_gettext('Name'),
+    name = StringField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(project_repo.get_by, 'name',
                                           message=lazy_gettext("Name is already taken."))])
-    short_name = TextField(lazy_gettext('Short Name'),
+    short_name = StringField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
                             pb_validator.Unique(project_repo.get_by, 'short_name',
@@ -79,8 +79,8 @@ class ProjectUpdateForm(ProjectForm):
     zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     protect = BooleanField(lazy_gettext('Protect with a password?'))
-    password = TextField(lazy_gettext('Password'))
-    webhook = TextField(lazy_gettext('Webhook'),
+    password = StringField(lazy_gettext('Password'))
+    webhook = StringField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
 
 
@@ -99,7 +99,7 @@ class TaskRedundancyForm(Form):
 
 
 class TaskPriorityForm(Form):
-    task_ids = TextField(lazy_gettext('Task IDs'),
+    task_ids = StringField(lazy_gettext('Task IDs'),
                          [validators.Required(),
                           pb_validator.CommaSeparatedIntegers()])
 
@@ -124,18 +124,18 @@ class TaskSchedulerForm(Form):
 
 class AnnouncementForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    title = TextField(lazy_gettext('Title'),
+    title = StringField(lazy_gettext('Title'),
                      [validators.Required(message=lazy_gettext(
                                     "You must enter a title for the post."))])
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
-    media_url = TextField(lazy_gettext('URL'))
+    media_url = StringField(lazy_gettext('URL'))
     published = BooleanField(lazy_gettext('Publish'))
 
 class BlogpostForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    title = TextField(lazy_gettext('Title'),
+    title = StringField(lazy_gettext('Title'),
                      [validators.Required(message=lazy_gettext(
                                     "You must enter a title for the post."))])
     body = TextAreaField(lazy_gettext('Body'),
@@ -151,11 +151,11 @@ class PasswordForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='csv')
+    form_name = StringField(label=None, widget=HiddenInput(), default='csv')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
-    csv_url = TextField(lazy_gettext('URL'),
+    csv_url = StringField(lazy_gettext('URL'),
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
 
@@ -164,11 +164,11 @@ class BulkTaskCSVImportForm(Form):
 
 
 class BulkTaskGDImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='gdocs')
+    form_name = StringField(label=None, widget=HiddenInput(), default='gdocs')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
-    googledocs_url = TextField(lazy_gettext('URL'),
+    googledocs_url = StringField(lazy_gettext('URL'),
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])
 
@@ -177,14 +177,14 @@ class BulkTaskGDImportForm(Form):
 
 
 class BulkTaskEpiCollectPlusImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='epicollect')
+    form_name = StringField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")
     msg_form_required = lazy_gettext("You must provide a Form name "
                                      "for the project")
-    epicollect_project = TextField(lazy_gettext('Project Name'),
+    epicollect_project = StringField(lazy_gettext('Project Name'),
                                    [validators.Required(message=msg_required)])
-    epicollect_form = TextField(lazy_gettext('Form name'),
+    epicollect_form = StringField(lazy_gettext('Form name'),
                                 [validators.Required(message=msg_required)])
 
     def get_import_data(self):
@@ -194,28 +194,28 @@ class BulkTaskEpiCollectPlusImportForm(Form):
 
 
 class BulkTaskFlickrImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='flickr')
+    form_name = StringField(label=None, widget=HiddenInput(), default='flickr')
     msg_required = lazy_gettext("You must provide a valid Flickr album ID")
-    album_id = TextField(lazy_gettext('Album ID'),
+    album_id = StringField(lazy_gettext('Album ID'),
                          [validators.Required(message=msg_required)])
     def get_import_data(self):
         return {'type': 'flickr', 'album_id': self.album_id.data}
 
 
 class BulkTaskDropboxImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='dropbox')
-    files = FieldList(TextField(label=None, widget=HiddenInput()))
+    form_name = StringField(label=None, widget=HiddenInput(), default='dropbox')
+    files = FieldList(StringField(label=None, widget=HiddenInput()))
     def get_import_data(self):
         return {'type': 'dropbox', 'files': self.files.data}
 
 
 class BulkTaskTwitterImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='twitter')
+    form_name = StringField(label=None, widget=HiddenInput(), default='twitter')
     msg_required = lazy_gettext("You must provide some source for the tweets")
-    source = TextField(lazy_gettext('Source'),
+    source = StringField(lazy_gettext('Source'),
                        [validators.Required(message=msg_required)])
     max_tweets = IntegerField(lazy_gettext('Number of tweets'))
-    user_credentials = TextField(label=None)
+    user_credentials = StringField(label=None)
     def get_import_data(self):
         return {
             'type': 'twitter',
@@ -226,7 +226,7 @@ class BulkTaskTwitterImportForm(Form):
 
 
 class BulkTaskYoutubeImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
+    form_name = StringField(label=None, widget=HiddenInput(), default='youtube')
     msg_required = lazy_gettext("You must provide a valid playlist")
     playlist_url = URLField(lazy_gettext('Playlist'),
                              [validators.Required(message=msg_required)])
@@ -238,10 +238,10 @@ class BulkTaskYoutubeImportForm(Form):
 
 
 class BulkTaskS3ImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='s3')
-    files = FieldList(TextField(label=None, widget=HiddenInput()))
+    form_name = StringField(label=None, widget=HiddenInput(), default='s3')
+    files = FieldList(StringField(label=None, widget=HiddenInput()))
     msg_required = lazy_gettext("You must provide a valid bucket")
-    bucket = TextField(lazy_gettext('Bucket'),
+    bucket = StringField(lazy_gettext('Bucket'),
                        [validators.Required(message=msg_required)])
     def get_import_data(self):
         return {
@@ -252,7 +252,7 @@ class BulkTaskS3ImportForm(Form):
 
 
 class BulkTaskLocalCSVImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='localCSV')
+    form_name = StringField(label=None, widget=HiddenInput(), default='localCSV')
     _allowed_extensions = set(['csv'])
     def _allowed_file(self, filename):
         return '.' in filename and \
@@ -290,11 +290,11 @@ class BulkTaskLocalCSVImportForm(Form):
 
 
 class BulkTaskIIIFImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='iiif')
+    form_name = StringField(label=None, widget=HiddenInput(), default='iiif')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
-    manifest_uri = TextField(lazy_gettext('URL'),
+    manifest_uri = StringField(lazy_gettext('URL'),
                              [validators.Required(message=msg_required),
                              validators.URL(message=msg_url)])
     version = SelectField(lazy_gettext('Presentation API version'), choices=[
@@ -337,7 +337,7 @@ class LoginForm(Form):
 
     """Login Form class for signin into PYBOSSA."""
 
-    email = TextField(lazy_gettext('E-mail'),
+    email = StringField(lazy_gettext('E-mail'),
                       [validators.Required(
                           message=lazy_gettext("The e-mail is required"))])
 
@@ -353,13 +353,13 @@ class RegisterForm(Form):
 
     # err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
     #                       "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
-    # fullname = TextField(lazy_gettext('Full name'),
+    # fullname = StringField(lazy_gettext('Full name'),
     #                     [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('User name'),
+    name = StringField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
                           pb_validator.NotAllowedChars(),
                           pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
@@ -410,12 +410,12 @@ class UpdateProfileForm(Form):
 
     # err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
     #                       "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
-    # fullname = TextField(lazy_gettext('Full name'),
+    # fullname = StringField(lazy_gettext('Full name'),
     #                     [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('Username'),
+    name = StringField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
@@ -437,7 +437,7 @@ class UpdateProfileForm(Form):
     subscribed = BooleanField(lazy_gettext('Get email notifications'))
 
     locale = SelectField(lazy_gettext('Language'))
-    ckan_api = TextField(lazy_gettext('CKAN API Key'))
+    ckan_api = StringField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
     restrict = BooleanField(lazy_gettext('Restrict processing'))
 
@@ -508,7 +508,7 @@ class ForgotPasswordForm(Form):
 
 
 class OTPForm(Form):
-    otp = TextField(lazy_gettext('One Time Password'),
+    otp = StringField(lazy_gettext('One Time Password'),
                     [validators.Required(message=lazy_gettext(
                         'You must provide a valid OTP code'))])
 
@@ -516,16 +516,16 @@ class OTPForm(Form):
 ### Forms for admin view
 
 class SearchForm(Form):
-    user = TextField(lazy_gettext('User'))
+    user = StringField(lazy_gettext('User'))
 
 
 class CategoryForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField(lazy_gettext('Name'),
+    name = StringField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(project_repo.get_category_by, 'name',
                                           message="Name is already taken.")])
-    description = TextField(lazy_gettext('Description'),
+    description = StringField(lazy_gettext('Description'),
                             [validators.Required()])
 
 
