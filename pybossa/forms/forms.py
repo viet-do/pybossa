@@ -21,7 +21,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, StringField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
-from wtforms.fields.html5 import EmailField, URLField
+from wtforms.fields import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask_babel import lazy_gettext, gettext
 
