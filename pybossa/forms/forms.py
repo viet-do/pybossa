@@ -51,18 +51,18 @@ BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
 class ProjectForm(Form):
     name = StringField(lazy_gettext('Name'),
-                     [validators.Required(),
+                     [validators.DataRequired(),
                       pb_validator.Unique(project_repo.get_by, 'name',
                                           message=lazy_gettext("Name is already taken."))])
     short_name = StringField(lazy_gettext('Short Name'),
-                           [validators.Required(),
+                           [validators.DataRequired(),
                             pb_validator.NotAllowedChars(),
                             pb_validator.Unique(project_repo.get_by, 'short_name',
                                 message=lazy_gettext(
                                     "Short Name is already taken.")),
                             pb_validator.ReservedName('project', current_app)])
     long_description = TextAreaField(lazy_gettext('Long Description'),
-                                     [validators.Required()])
+                                     [validators.DataRequired()])
     description = TextAreaField(lazy_gettext('Description'),
                                 [validators.Length(max=255)])
 
@@ -91,7 +91,7 @@ class TaskPresenterForm(Form):
 
 class TaskRedundancyForm(Form):
     n_answers = IntegerField(lazy_gettext('Redundancy'),
-                             [validators.Required(),
+                             [validators.DataRequired(),
                               validators.NumberRange(
                                   min=1, max=1000,
                                   message=lazy_gettext('Number of answers should be a \
@@ -100,7 +100,7 @@ class TaskRedundancyForm(Form):
 
 class TaskPriorityForm(Form):
     task_ids = StringField(lazy_gettext('Task IDs'),
-                         [validators.Required(),
+                         [validators.DataRequired(),
                           pb_validator.CommaSeparatedIntegers()])
 
     priority_0 = DecimalField(lazy_gettext('Priority'),
@@ -396,7 +396,7 @@ class RegisterForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     
     #############################################################viet
-    consent1= BooleanField('I acknowledge participation is a volunteer basis. I waive any and all claims to ownership of my contributions to the Easy COVID-19 project and will never seek compensation for those contributions.', [validators.Required()])
+    consent1= BooleanField('I acknowledge participation is a volunteer basis. I waive any and all claims to ownership of my contributions to the Easy COVID-19 project and will never seek compensation for those contributions.', [validators.DataRequired()])
 
     #consent2= BooleanField(lazy_gettext('I am not a resident of California, Colorado or a country outside the United States of America'),false_values=("False", "false", '', '0', 0))
     #############################################################viet
@@ -522,11 +522,11 @@ class SearchForm(Form):
 class CategoryForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = StringField(lazy_gettext('Name'),
-                     [validators.Required(),
+                     [validators.DataRequired(),
                       pb_validator.Unique(project_repo.get_category_by, 'name',
                                           message="Name is already taken.")])
     description = StringField(lazy_gettext('Description'),
-                            [validators.Required()])
+                            [validators.DataRequired()])
 
 
 ### Common forms
